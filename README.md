@@ -3,6 +3,8 @@
    python setup.py install<br>
 ## 在线包安装
    pip install pyQt5<br>
+## 生成EXE
+   pyinstaller -F -w (path)field.py
 ## ui文件生成py文件
    pyuic5 -o demo.py demo.ui<br>
 ## 生成EXE指令
