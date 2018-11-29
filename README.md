@@ -4,8 +4,8 @@
    进入python3安装目录下的Scripts文件<br>
    pip3 install PyQt5 安装<br>
 ## 在线包安装
-   缺少某些函数都可以通过一下CMD来在线安装
-   pip install pyQt5<br>
+   缺少某些函数都可以通过一下CMD来在线安装<br>
+   例如 ： pip install pyQt5<br>
 ## 生成EXE
    pyinstaller -F -w (path)field.py
 ## ui文件生成py文件
