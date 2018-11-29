@@ -1,6 +1,8 @@
 # My_python
 ## 本地安装包指令
    python setup.py install<br>
+   进入python3安装目录下的Scripts文件<br>
+   pip3 install PyQt5 安装<br>
 ## 在线包安装
    pip install pyQt5<br>
 ## 生成EXE
