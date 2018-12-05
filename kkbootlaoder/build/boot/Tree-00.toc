@@ -1,0 +1,5 @@
+('C:\\Users\\wsl\\Desktop\\kkbootlaoder\\build\\boot\\pyserial-3.3-py3.6.egg',
+ None,
+ {'*.pyc', '*.pyw', '*.cp36-win_amd64.pyd', '*.py', 'EGG-INFO', '*.pyd'},
+ 'DATA',
+ [])

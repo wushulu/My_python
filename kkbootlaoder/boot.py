@@ -31,6 +31,8 @@ class My_windows(QMainWindow, Ui_MainWindow):
         self.hexfile = ''
         self.hexline = 0
         self.opnefile_falg = False
+        self.receive_right_flag=False
+        self.sleep_time=0.05
         self.pushButton.clicked.connect(self.OpenCOM)
         self.pushButton_2.clicked.connect(self.Read_boot_Info)
         self.pushButton_3.clicked.connect(self.Erase_Flash)
@@ -65,21 +67,39 @@ class My_windows(QMainWindow, Ui_MainWindow):
             sleep(0.2)
             self.port = self.comboBox.currentText()
             self.baudrate =int(self.comboBox_2.currentText())
-            self.por=serial.Serial( self.port,self.baudrate)
-            self.textBrowser.append('COM is open  baud rate:'+self.comboBox_2.currentText())
-            self.textBrowser.moveCursor(QtGui.QTextCursor.End)
-            self.task = threading.Thread(target=self.received_data) #add received thread
-            self.por.close()
-            self.por.open()
-            self.task.setDaemon(True)
-            self.task.start()
+            try:
+                self.por=serial.Serial( self.port,self.baudrate)
+                self.textBrowser.append('COM is open  baud rate:'+self.comboBox_2.currentText())
+                self.textBrowser.moveCursor(QtGui.QTextCursor.End)
+                self.task = threading.Thread(target=self.received_data) #add received thread
+                self.por.close()
+                self.por.open()
+                self.task.setDaemon(True)
+                self.task.start()
+            except IOError:
+                print('Error: COM is busing')
+                self.textBrowser.append('Error: this COM is busing can not open it')
+                self.textBrowser.moveCursor(QtGui.QTextCursor.End)
+            else:
+                print("COM error")
+
 
     def Serial_Send_data(self,data):
+        i=0
         if self.por.isOpen():
-            self.por.write(data)
-            sleep(0.05)
-            self.textBrowser.append('send data:'+str(data))
-            self.textBrowser.moveCursor(QtGui.QTextCursor.End)
+            while i<=4:
+                self.por.write(data)
+                self.textBrowser.append('send data:'+str(data))
+                self.textBrowser.moveCursor(QtGui.QTextCursor.End)
+                sleep(self.sleep_time)
+                if self.receive_right_flag==True:
+                    self.receive_right_flag=False
+                    break
+                elif i==4:
+                    self.textBrowser.append('received data time out')
+                    self.textBrowser.moveCursor(QtGui.QTextCursor.End)                    
+                i+=1
+
         else:
             self.textBrowser.append('please open uart com')
             self.textBrowser.moveCursor(QtGui.QTextCursor.End)           
@@ -96,7 +116,7 @@ class My_windows(QMainWindow, Ui_MainWindow):
             size = self.por.inWaiting()
             if size:
                 receive_data = self.por.read_all()
-                data_change=self.check_received_data(receive_data)## received data change
+                data_change=self.check_received_data(receive_data)## received data change delte DLE
                 print('dat_change',data_change)
                 '''
                 for get_data in receive_data:
@@ -129,7 +149,15 @@ class My_windows(QMainWindow, Ui_MainWindow):
         data_len=len(data)
         if data_len>=5:
             for i in data:
-                data_re.append(int(i))
+                try:
+                    data_re.append(int(i))
+                except ValueError:
+                    print("Error: received data is error ")
+                    break
+                else:
+                    print("Error: other error")
+                    break
+
             for j in range(data_len):
                 if data_re[j]==self.DLE:
                     data_next=data_re[j+1]
@@ -148,16 +176,22 @@ class My_windows(QMainWindow, Ui_MainWindow):
     def CMD_explain(self,data):
         receive_cmd = data[1]
         if receive_cmd==self.READ_BOOT_INFO:
+            self.receive_right_flag=True
             self.textBrowser.append('Software version:'+str(data[2])+'.'+str(data[3]))
             self.textBrowser.moveCursor(QtGui.QTextCursor.End)
         elif receive_cmd==self.ERASE_FLASH:
+            self.receive_right_flag=True
             self.textBrowser.append('Flash is erased')
             self.textBrowser.moveCursor(QtGui.QTextCursor.End)
-        #elif receive_cmd==self.PROGRAM_FLASH:
-        #    return
+        elif receive_cmd==self.PROGRAM_FLASH:
+            if data[2]==1:
+                self.receive_right_flag=True
+
+            #return
             #self.textBrowser.append('Progarming ...')
             #self.textBrowser.moveCursor(QtGui.QTextCursor.End)
         elif receive_cmd==self.JMP_TO_APP:
+            self.receive_right_flag=True
             self.textBrowser.append('RUN APP')
             self.textBrowser.moveCursor(QtGui.QTextCursor.End)
         
@@ -173,7 +207,7 @@ class My_windows(QMainWindow, Ui_MainWindow):
         fileName,filetype = QFileDialog.getOpenFileName(None,
                     "choose file",
                     "./",
-                    "All Files (*);;Hex Files (*.hex)")
+                    "Hex Files (*.hex);;All Files (*)")
         if not(fileName==''):
             self.hexfile=[]
             self.hexline=[]
@@ -200,6 +234,7 @@ class My_windows(QMainWindow, Ui_MainWindow):
         self.CMD = [self.READ_BOOT_INFO]
         data=self.CMD
         data=self.Check_data(data)
+        self.sleep_time=0.05
         self.Serial_Send_data(data)
         #print(data)
 
@@ -210,6 +245,7 @@ class My_windows(QMainWindow, Ui_MainWindow):
         self.CMD = [self.ERASE_FLASH]
         data=self.CMD
         data=self.Check_data(data)
+        self.sleep_time=0.8
         self.Serial_Send_data(data)
         
 
@@ -222,6 +258,7 @@ class My_windows(QMainWindow, Ui_MainWindow):
         data=self.Check_data(data)
         self.Serial_Send_data(data)
         '''
+        self.sleep_time=0.05
         if  self.opnefile_falg==True:
             data=[]
             data_cmd=[]
@@ -237,7 +274,7 @@ class My_windows(QMainWindow, Ui_MainWindow):
                     #print(data)
                     data=[]
                 else:
-                    self.textBrowser.append('erro :this file is not standard hex file')
+                    self.textBrowser.append('Error :this file is not standard hex file')
                     break
         else:
             self.textBrowser.append("please open standard hex file")
@@ -246,6 +283,7 @@ class My_windows(QMainWindow, Ui_MainWindow):
         self.CMD = [self.JMP_TO_APP]
         data=self.CMD
         data=self.Check_data(data)
+        self.sleep_time=0.03
         self.Serial_Send_data(data)
 
     def Check_data(self,data):
@@ -273,12 +311,11 @@ class My_windows(QMainWindow, Ui_MainWindow):
         for s_data in data:
             s_data=acsii2hex.data_acsii_2_hex(s_data)
             change_data.append(s_data)
-        #print(change_data)
-        print('list',change_data)
+        #print('list',change_data)
         for i in range(len(change_data)-1):
             if i%2==0:
                 combine_data.append((change_data[i]<<4)+change_data[i+1])
-        print('combine',combine_data)
+        #print('combine',combine_data)
         return combine_data
 
 
