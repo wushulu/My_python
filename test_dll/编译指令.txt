@@ -1,0 +1,2 @@
+PS F:\myfiled\test_dll> gcc -c TestDLL.c
+PS F:\myfiled\test_dll> gcc -shared -o TestDll.dll TestDll.o
