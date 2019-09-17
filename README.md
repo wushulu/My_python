@@ -13,6 +13,10 @@
 ### 菜单栏链接函数
 self.actionOpenhex.triggered.connect(self.actionOpen)<br>
 ## 生成EXE指令
+   1、pyinstaller -F -w path my.py<br>
+   2、pyinstaller -F path my.py --noconsole<br>
    ![image](https://github.com/wushulu/My_python/blob/master/%E5%9B%BE%E7%89%87/Py%E6%97%A0%E6%8E%A7%E5%88%B6%E5%8F%B0.JPG)
 ## Y_mode.rar 说明
    文件中包含如何使用 CRC 和 和校验<br>
+## kkbootlaoder 说明
+文件包含了上位机，及相关其他文件。<br>
